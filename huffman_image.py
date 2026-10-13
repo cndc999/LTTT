@@ -7,7 +7,6 @@ Chạy:          python huffman_image.py anh.jpg
                python huffman_image.py anh.jpg --gray   (nén ảnh xám)
 """
 import heapq
-import math
 import os
 import struct
 import sys
@@ -66,6 +65,7 @@ def compress(data, mode, size, out_path):
     freq = Counter(data)
     codes = build_codes(build_tree(freq))
     bits = "".join(codes[b] for b in data)
+    nbits = len(bits)  # số bit sau mã hóa (chưa tính padding)
 
     pad = (8 - len(bits) % 8) % 8
     bits += "0" * pad
@@ -79,7 +79,7 @@ def compress(data, mode, size, out_path):
             f.write(struct.pack(">BI", sym, fr))
         f.write(struct.pack(">B", pad))
         f.write(payload)
-    return freq, codes
+    return nbits
 
 
 def decompress(in_path, out_img_path):
@@ -124,23 +124,17 @@ def main():
     data, mode, size = image_to_bytes(path, gray)
     bits = bytes_to_bits(data)
     print(f"Kích thước ảnh     : {size[0]}x{size[1]} ({mode})")
-    print(f"Số bit gốc         : {len(bits):,} bit ({len(data):,} byte)")
-    print(f"10 bit đầu         : {bits[:10]}...")
-
-    freq, codes = compress(data, mode, size, base + ".huff")
-
-    total = len(data)
-    entropy = -sum(f / total * math.log2(f / total) for f in freq.values())
-    avg_len = sum(freq[s] * len(codes[s]) for s in freq) / total
+    nbits = compress(data, mode, size, base + ".huff")
     comp_size = os.path.getsize(base + ".huff")
 
-    print(f"Entropy H          : {entropy:.4f} bit/symbol")
-    print(f"Độ dài mã TB       : {avg_len:.4f} bit/symbol")
-    print(f"Kích thước nén     : {comp_size:,} byte")
-    print(f"Tỉ lệ nén          : {len(data) / comp_size:.3f}:1")
+    print(f"Số bit ảnh trước mã hóa   : {len(bits):,} bit")
+    print(f"Số bit sau mã hóa         : {nbits:,} bit")
+    print(f"Kích thước trước mã hóa   : {len(data):,} byte")
+    print(f"Kích thước sau mã hóa     : {comp_size:,} byte (file .huff, gồm header)")
+    print(f"Hiệu suất nén             : {(1 - comp_size / len(data)) * 100:.2f}%")
 
-    restored = decompress(base + ".huff", base + "_restored.png")
-    print("Giải nén đúng 100% :", restored == data)
+    # Giải nén và lưu ảnh khôi phục (không in kiểm tra)
+    decompress(base + ".huff", base + "_restored.png")
 
 
 if __name__ == "__main__":
