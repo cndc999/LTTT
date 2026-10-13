@@ -130,7 +130,7 @@ def main():
     print(f"Số bit ảnh trước mã hóa   : {len(bits):,} bit")
     print(f"Số bit sau mã hóa         : {nbits:,} bit")
     print(f"Kích thước trước mã hóa   : {len(data):,} byte")
-    print(f"Kích thước sau mã hóa     : {comp_size:,} byte (file .huff, gồm header)")
+    print(f"Kích thước sau mã hóa     : {comp_size:,} byte")
     print(f"Hiệu suất nén             : {(1 - comp_size / len(data)) * 100:.2f}%")
 
     # Giải nén và lưu ảnh khôi phục (không in kiểm tra)
